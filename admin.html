@@ -1,0 +1,468 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>NOTORIOUS 後台管理</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<style>
+  :root {
+    --brand: #3C3489;
+    --brand-light: #EEEDFE;
+    --green: #1D9E75;
+    --green-light: #E1F5EE;
+    --red: #E24B4A;
+    --red-light: #FCEBEB;
+    --gray-50: #F8F8F6;
+    --gray-100: #F0EFE8;
+    --gray-200: #D3D1C7;
+    --gray-400: #888780;
+    --gray-700: #444441;
+    --gray-900: #1A1A18;
+    --radius: 12px;
+    --radius-sm: 8px;
+    --shadow: 0 1px 3px rgba(0,0,0,0.08), 0 4px 16px rgba(0,0,0,0.06);
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: 'Noto Sans TC', sans-serif;
+    background: var(--gray-50);
+    color: var(--gray-900);
+    min-height: 100vh;
+    font-size: 15px;
+  }
+
+  /* Login */
+  .login-wrap {
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 2rem;
+  }
+  .login-box {
+    background: #fff;
+    border-radius: var(--radius);
+    padding: 2.5rem 2rem;
+    box-shadow: var(--shadow);
+    width: 100%;
+    max-width: 360px;
+    text-align: center;
+  }
+  .login-logo {
+    width: 56px; height: 56px;
+    background: var(--brand);
+    border-radius: 14px;
+    display: flex; align-items: center; justify-content: center;
+    margin: 0 auto 1.25rem;
+    font-size: 24px;
+  }
+  .login-title { font-size: 20px; font-weight: 700; margin-bottom: 6px; }
+  .login-sub { font-size: 13px; color: var(--gray-400); margin-bottom: 1.75rem; }
+  .login-box input {
+    width: 100%;
+    padding: 12px 14px;
+    border: 1.5px solid var(--gray-200);
+    border-radius: var(--radius-sm);
+    font-size: 15px;
+    font-family: 'Noto Sans TC', sans-serif;
+    margin-bottom: 12px;
+    text-align: center;
+    letter-spacing: 0.1em;
+  }
+  .login-box input:focus { outline: none; border-color: var(--brand); }
+  .login-err { font-size: 13px; color: var(--red); margin-bottom: 12px; display: none; }
+  .login-err.show { display: block; }
+  .btn-login {
+    width: 100%;
+    padding: 13px;
+    background: var(--brand);
+    color: #fff;
+    border: none;
+    border-radius: var(--radius-sm);
+    font-size: 15px;
+    font-weight: 700;
+    font-family: 'Noto Sans TC', sans-serif;
+    cursor: pointer;
+  }
+  .btn-login:hover { background: #534AB7; }
+
+  /* Header */
+  .header {
+    background: var(--brand);
+    padding: 1rem 1.5rem;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+  .header-title { color: #fff; font-size: 16px; font-weight: 700; }
+  .header-sub { color: rgba(255,255,255,0.6); font-size: 12px; }
+  .btn-logout {
+    padding: 6px 14px;
+    background: rgba(255,255,255,0.15);
+    color: #fff;
+    border: 1px solid rgba(255,255,255,0.3);
+    border-radius: 20px;
+    font-size: 13px;
+    cursor: pointer;
+    font-family: 'Noto Sans TC', sans-serif;
+  }
+
+  /* Main */
+  .main { max-width: 960px; margin: 0 auto; padding: 1.5rem 1rem 4rem; }
+
+  /* Stats */
+  .stat-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 12px;
+    margin-bottom: 1.25rem;
+  }
+  .stat-card {
+    background: #fff;
+    border-radius: var(--radius);
+    padding: 1.25rem 1rem;
+    box-shadow: var(--shadow);
+    text-align: center;
+  }
+  .stat-num { font-size: 28px; font-weight: 700; color: var(--brand); }
+  .stat-label { font-size: 12px; color: var(--gray-400); margin-top: 4px; }
+
+  /* Toolbar */
+  .toolbar {
+    display: flex;
+    gap: 8px;
+    margin-bottom: 1rem;
+    flex-wrap: wrap;
+    align-items: center;
+  }
+  .toolbar input {
+    flex: 1;
+    min-width: 160px;
+    padding: 10px 14px;
+    border: 1.5px solid var(--gray-200);
+    border-radius: var(--radius-sm);
+    font-size: 14px;
+    font-family: 'Noto Sans TC', sans-serif;
+  }
+  .toolbar input:focus { outline: none; border-color: var(--brand); }
+  .btn-export {
+    padding: 10px 18px;
+    background: var(--green);
+    color: #fff;
+    border: none;
+    border-radius: var(--radius-sm);
+    font-size: 14px;
+    font-weight: 700;
+    font-family: 'Noto Sans TC', sans-serif;
+    cursor: pointer;
+    white-space: nowrap;
+  }
+  .btn-export:hover { background: #0F6E56; }
+  .btn-danger {
+    padding: 10px 18px;
+    background: #fff;
+    color: var(--red);
+    border: 1.5px solid var(--gray-200);
+    border-radius: var(--radius-sm);
+    font-size: 14px;
+    font-family: 'Noto Sans TC', sans-serif;
+    cursor: pointer;
+    white-space: nowrap;
+  }
+  .btn-danger:hover { border-color: var(--red); }
+
+  /* Table */
+  .table-wrap {
+    background: #fff;
+    border-radius: var(--radius);
+    box-shadow: var(--shadow);
+    overflow: hidden;
+  }
+  .table-scroll { overflow-x: auto; }
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 13px;
+    white-space: nowrap;
+  }
+  th {
+    padding: 10px 14px;
+    text-align: left;
+    font-size: 11px;
+    font-weight: 700;
+    color: var(--gray-400);
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+    border-bottom: 1px solid var(--gray-100);
+    background: var(--gray-50);
+  }
+  td {
+    padding: 11px 14px;
+    border-bottom: 1px solid var(--gray-100);
+    color: var(--gray-900);
+  }
+  tr:last-child td { border-bottom: none; }
+  tr:hover td { background: var(--gray-50); }
+  td.invoice { font-weight: 700; font-family: monospace; font-size: 13px; }
+  td.products { white-space: normal; max-width: 240px; font-size: 12px; color: var(--gray-700); line-height: 1.6; }
+
+  .badge {
+    display: inline-block;
+    padding: 2px 8px;
+    border-radius: 999px;
+    font-size: 11px;
+    font-weight: 700;
+  }
+  .badge-delivery { background: #E6F1FB; color: #0C447C; }
+  .badge-family { background: #E6F4E6; color: #1a6e1a; }
+  .badge-seven { background: #FFF0E6; color: #c04a00; }
+
+  .empty {
+    text-align: center;
+    padding: 4rem 1rem;
+    color: var(--gray-400);
+    font-size: 14px;
+  }
+  .empty-icon { font-size: 36px; margin-bottom: 12px; }
+
+  .hidden { display: none; }
+</style>
+</head>
+<body>
+
+<!-- Login screen -->
+<div class="login-wrap" id="login-screen">
+  <div class="login-box">
+    <div class="login-logo">🔒</div>
+    <div class="login-title">後台管理</div>
+    <div class="login-sub">NOTORIOUS 地推訂單系統</div>
+    <input type="password" id="pw-input" placeholder="請輸入密碼" onkeydown="if(event.key==='Enter')doLogin()">
+    <div class="login-err" id="pw-err">密碼錯誤，請再試一次</div>
+    <button class="btn-login" onclick="doLogin()">登入</button>
+  </div>
+</div>
+
+<!-- Admin screen -->
+<div id="admin-screen" class="hidden">
+  <div class="header">
+    <div>
+      <div class="header-title">NOTORIOUS 後台管理</div>
+      <div class="header-sub">地推訂單總覽</div>
+    </div>
+    <button class="btn-logout" onclick="doLogout()">登出</button>
+  </div>
+
+  <div class="main">
+    <div class="stat-grid" id="stat-grid"></div>
+
+    <div class="toolbar">
+      <input type="text" placeholder="搜尋姓名、電話或發票號碼..." oninput="renderTable(this.value)">
+      <button class="btn-export" onclick="exportExcel()">⬇ 匯出 Excel</button>
+      <button class="btn-danger" onclick="clearAll()">🗑 清除全部</button>
+    </div>
+
+    <div class="table-wrap">
+      <div class="table-scroll">
+        <table>
+          <thead>
+            <tr>
+              <th>發票號碼</th>
+              <th>姓名</th>
+              <th>電話</th>
+              <th>配送</th>
+              <th>地址 / 門市</th>
+              <th>商品明細</th>
+              <th>備註</th>
+              <th>填單時間</th>
+            </tr>
+          </thead>
+          <tbody id="order-tbody"></tbody>
+        </table>
+      </div>
+      <div id="empty-state" class="empty hidden">
+        <div class="empty-icon">📭</div>
+        尚無訂單資料
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+const ADMIN_PASSWORD = 'notorious2025';
+const SKU_MAP = {
+  '分離乳清::重磅巧克力': { sku: 'N2101LCEB0201-25-13', name: '分離乳清-重磅巧克力' },
+  '分離乳清::草莓':       { sku: 'N2101LCEB0201-02-13', name: '分離乳清-草莓' },
+  '分離乳清::鐵觀音':     { sku: 'N2101LCEB0201-09-13', name: '分離乳清-鐵觀音' },
+  '分離乳清::優格':       { sku: 'N2101LCEB0201-11-13', name: '分離乳清-優格' },
+  '分離乳清::四季春':     { sku: 'N2101LCEB0201-08-13', name: '分離乳清-四季春' },
+  '分離乳清::原味':       { sku: 'N2101LCEB0201-30-13', name: '分離乳清-原味' },
+  '濃縮乳清::可可':       { sku: 'N2101LCEB0101-01-13', name: '濃縮乳清-可可' },
+  '濃縮乳清::奶茶':       { sku: 'N2101LCEB0101-03-13', name: '濃縮乳清-奶茶' },
+  '濃縮乳清::抹茶':       { sku: 'N2101LCEB0101-04-13', name: '濃縮乳清-抹茶' },
+  '濃縮乳清::芝麻':       { sku: 'N2101LCEB0101-05-13', name: '濃縮乳清-芝麻' },
+  '濃縮乳清::泰式奶茶':   { sku: 'N2101LCEB0101-24-13', name: '濃縮乳清-泰式奶茶' },
+  '濃縮乳清::木瓜牛奶':   { sku: 'N2101LCEB0101-06-13', name: '濃縮乳清-木瓜牛奶' },
+  '濃縮乳清::拿鐵':       { sku: 'N2101LCEB0101-22-13', name: '濃縮乳清-拿鐵' },
+  '濃縮乳清::芋頭':       { sku: 'N2101LCEB0101-14-13', name: '濃縮乳清-芋頭' },
+  '濃縮乳清::布丁':       { sku: 'N2101LCEB0101-28-13', name: '濃縮乳清-布丁' },
+  '濃縮乳清::果汁牛奶':   { sku: 'N2101LCEB0101-29-13', name: '濃縮乳清-果汁牛奶' },
+  '濃縮乳清::蘋果牛奶':   { sku: 'N2101LCEB0101-26-13', name: '濃縮乳清-蘋果牛奶' },
+  '濃縮乳清::焦糖瑪奇朵': { sku: 'N2101LCEB0101-18-13', name: '濃縮乳清-焦糖瑪奇朵' },
+  '濃縮乳清::牛軋糖':     { sku: 'N2101LCEB0101-32-13', name: '濃縮乳清-牛軋糖' },
+  '濃縮乳清::麥芽牛奶':   { sku: 'N2101LCEB0101-33-13', name: '濃縮乳清-麥芽牛奶' },
+  '純素乳清::可可':       { sku: 'N2101LCEB0501-01-13', name: '全素植物蛋白-可可' },
+  '純素乳清::紅豆':       { sku: 'N2101LCEB0501-16-13', name: '全素植物蛋白-紅豆' },
+  '純素乳清::綠豆':       { sku: 'N2101LCEB0501-17-13', name: '全素植物蛋白-綠豆' },
+  '訓練補給::鍊激力 Pre-workout':  { sku: 'N2306HBLB0601-23-15', name: 'Pre Workout 鏈激力(綜合胺基酸)' },
+  '訓練補給::L-Arginine 精胺酸粉': { sku: 'N2504HBLB0802-00-19', name: 'L-Arginine 精胺酸粉' },
+  '搖搖杯::黑':     { sku: 'N2101ICA0101-01-17', name: '搖搖杯-黑' },
+  '搖搖杯::紅色':   { sku: 'N2101ICA0101-02-17', name: '搖搖杯-紅色' },
+  '搖搖杯::多拉藍': { sku: 'N2101ICA0101-03-17', name: '搖搖杯-多拉藍' },
+  '搖搖杯::成吉橘': { sku: 'N2101ICA0101-06-17', name: '搖搖杯-成吉橘' },
+  '搖搖杯::深邃紫': { sku: 'N2101ICA0101-07-17', name: '搖搖杯-深邃紫' },
+  '搖搖杯::沉穩綠': { sku: 'N2101ICA0101-08-17', name: '搖搖杯-沉穩綠' },
+  '搖搖杯::迷霧藍': { sku: 'N2101ICA0101-31-17', name: '搖搖杯-迷霧藍' },
+  '搖搖杯::暮茶棕': { sku: 'N2101IICA0101-32-17', name: '搖搖杯-暮茶棕' },
+  '搖搖杯::煙灰綠': { sku: 'N2101ICA0101-33-17', name: '搖搖杯-煙灰綠' },
+  '搖搖杯::星霧紫': { sku: 'N2101IICA0101-34-17', name: '搖搖杯-星霧紫' },
+  '搖搖杯::雲影灰': { sku: 'N2101ICA0101-35-17', name: '搖搖杯-雲影灰' },
+  '保健食品::魚油':                { sku: 'N2406NBHA0101-00-06', name: '魚油' },
+  '保健食品::舒眠晚安膠囊':        { sku: 'N2406LSBA1201-00-06', name: '舒眠晚安膠囊' },
+  '保健食品::膠原蛋白粉':          { sku: 'N2402NBHA1101-00-17', name: '膠原蛋白粉' },
+  '保健食品::鋅鎂力膠囊':          { sku: 'N2402NBHA1001-00-06', name: '鋅鎂力膠囊' },
+  '保健食品::有機馬卡根粉':        { sku: 'N2309NBHA0901-00-01', name: '有機馬卡根粉' },
+  '保健食品::金盞花葉黃素':        { sku: 'N1901HBLA0202-00-05', name: '金盞花葉黃素' },
+  '保健食品::機能強化膠囊':        { sku: 'N2507NBHA1601-00-07', name: '機能強化膠囊' },
+  '保健食品::綜合B群X維生素':      { sku: 'N1901NBHA0405-00-07', name: '綜合B群X維生素' },
+  '保健食品::克菲爾益生菌':        { sku: 'N2411SYNA0301-00-01', name: '克菲爾益生菌' },
+  '保健食品::維生素D3x酵母葡聚糖': { sku: 'N1901NBHA0407-00-06', name: '維生素D3X酵母葡聚糖' },
+  '保健食品::迅捷全效雙薑黃':      { sku: 'N1901HBLA0501-00-06', name: '薑黃' },
+  '保健食品::綜合酵素X D-核糖':    { sku: 'N2304HBLA0801-00-06', name: '綜合酵素X D核醣' },
+  '保健食品::UC-II複方膠囊':       { sku: 'N2409HBLA1301-00-06', name: 'UC-II複方膠囊' },
+  '保健食品::硬漢膠囊':            { sku: 'N2410HBLA1402-00-06', name: '硬漢膠囊' },
+  '保健食品::鈣X維生素K2':         { sku: 'N2505HBLA1501-00-06', name: '鈣X維生素K2' },
+  '保健食品::運動益生菌':          { sku: 'N2507SYNA0301-00-01', name: '運動益生菌' },
+};
+
+let allOrders = [];
+
+async function loadOrders() {
+  try {
+    const r = await window.storage.get('tsiapo_orders');
+    if (r && r.value) allOrders = JSON.parse(r.value);
+  } catch(e) { allOrders = []; }
+}
+
+async function saveOrders() {
+  try { await window.storage.set('tsiapo_orders', JSON.stringify(allOrders)); } catch(e) {}
+}
+
+function doLogin() {
+  const pw = document.getElementById('pw-input').value;
+  if (pw === ADMIN_PASSWORD) {
+    document.getElementById('login-screen').classList.add('hidden');
+    document.getElementById('admin-screen').classList.remove('hidden');
+    loadOrders().then(() => renderTable(''));
+  } else {
+    document.getElementById('pw-err').classList.add('show');
+    document.getElementById('pw-input').value = '';
+    document.getElementById('pw-input').focus();
+  }
+}
+
+function doLogout() {
+  document.getElementById('login-screen').classList.remove('hidden');
+  document.getElementById('admin-screen').classList.add('hidden');
+  document.getElementById('pw-input').value = '';
+  document.getElementById('pw-err').classList.remove('show');
+}
+
+function renderTable(filter) {
+  const q = filter.trim().toLowerCase();
+  const filtered = allOrders.filter(o =>
+    !q || o.name.includes(q) || o.phone.includes(q) || o.invoice.toLowerCase().includes(q)
+  );
+
+  const totalOrders = allOrders.length;
+  const totalItems = allOrders.reduce((acc, o) => acc + Object.values(o.products).reduce((a,b)=>a+b,0), 0);
+  const dc = {};
+  allOrders.forEach(o => { dc[o.delivery] = (dc[o.delivery]||0)+1; });
+  const top = Object.entries(dc).sort((a,b)=>b[1]-a[1])[0];
+  document.getElementById('stat-grid').innerHTML = `
+    <div class="stat-card"><div class="stat-num">${totalOrders}</div><div class="stat-label">總訂單數</div></div>
+    <div class="stat-card"><div class="stat-num">${totalItems}</div><div class="stat-label">總商品件數</div></div>
+    <div class="stat-card"><div class="stat-num" style="font-size:18px">${top ? top[0] : '—'}</div><div class="stat-label">最多配送方式</div></div>`;
+
+  const tbody = document.getElementById('order-tbody');
+  const empty = document.getElementById('empty-state');
+
+  if (!filtered.length) {
+    tbody.innerHTML = '';
+    empty.classList.remove('hidden');
+    return;
+  }
+  empty.classList.add('hidden');
+  tbody.innerHTML = filtered.map(o => {
+    const prods = Object.entries(o.products).map(([k,q]) => {
+      const info = SKU_MAP[k];
+      return `${info ? info.name : k} ×${q}`;
+    }).join('<br>');
+    const bc = o.delivery === '宅配' ? 'badge-delivery' : o.delivery.includes('全家') ? 'badge-family' : 'badge-seven';
+    return `<tr>
+      <td class="invoice">${o.invoice}</td>
+      <td>${o.name}</td>
+      <td>${o.phone}</td>
+      <td><span class="badge ${bc}">${o.delivery}</span></td>
+      <td style="max-width:180px;white-space:normal;font-size:13px">${o.address}</td>
+      <td class="products">${prods}</td>
+      <td style="font-size:12px;color:var(--gray-400);max-width:120px;white-space:normal">${o.note || '—'}</td>
+      <td style="font-size:12px;color:var(--gray-400)">${o.time}</td>
+    </tr>`;
+  }).join('');
+}
+
+function orderToRows(orders) {
+  const rows = [];
+  orders.forEach(o => {
+    Object.entries(o.products).forEach(([k, qty], idx) => {
+      const info = SKU_MAP[k] || { sku: '待補', name: k };
+      rows.push({
+        '填單日期': idx === 0 ? o.time.split(' ')[0] : '',
+        '發票號碼': idx === 0 ? o.invoice : '',
+        '姓名':     idx === 0 ? o.name : '',
+        '電話':     idx === 0 ? o.phone : '',
+        '配送方式': idx === 0 ? o.delivery : '',
+        '地址/門市':idx === 0 ? o.address : '',
+        '商品貨號': info.sku,
+        '商品名稱': info.name,
+        '數量':     qty,
+        '備註':     idx === 0 ? o.note : ''
+      });
+    });
+  });
+  return rows;
+}
+
+function exportExcel() {
+  if (!allOrders.length) { alert('尚無訂單資料'); return; }
+  const rows = orderToRows(allOrders);
+  const ws = XLSX.utils.json_to_sheet(rows, {
+    header: ['填單日期','發票號碼','姓名','電話','配送方式','地址/門市','商品貨號','商品名稱','數量','備註']
+  });
+  const wb = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb, ws, '訂單明細');
+  XLSX.writeFile(wb, `NOTORIOUS訂單_${new Date().toLocaleDateString('zh-TW').replace(/\//g,'-')}.xlsx`);
+}
+
+function clearAll() {
+  if (!confirm(`確定要刪除全部 ${allOrders.length} 筆訂單嗎？此操作無法復原。`)) return;
+  allOrders = [];
+  saveOrders();
+  renderTable('');
+}
+</script>
+</body>
+</html>
