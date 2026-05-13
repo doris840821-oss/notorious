@@ -426,7 +426,7 @@ async function submitOrder() {
   Object.entries(selections).forEach(([k, qty], idx) => {
     const info = SKU_MAP[k] || { sku: '待補', name: k };
     rows.push({
-      '填單日期': idx === 0 ? now.toLocaleDateString('zh-TW') : '',
+      '填單日期': idx === 0 ? now.toLocaleString('zh-TW', {year:'numeric',month:'2-digit',day:'2-digit',hour:'2-digit',minute:'2-digit',second:'2-digit',hour12:false}) : '',
       '發票號碼': idx === 0 ? invoice : '',
       '姓名':     idx === 0 ? name : '',
       '電話':     idx === 0 ? phone : '',
