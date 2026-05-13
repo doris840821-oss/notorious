@@ -116,7 +116,7 @@
 
 <div class="overlay" id="overlay">
   <div class="spinner"></div>
-  <div class="overlay-text">送出中，請稍候...</div>
+  <div class="overlay-text">資料傳送中，請勿關閉頁面...</div>
 </div>
 
 <div class="header">
@@ -426,7 +426,7 @@ async function submitOrder() {
   Object.entries(selections).forEach(([k, qty], idx) => {
     const info = SKU_MAP[k] || { sku: '待補', name: k };
     rows.push({
-      '填單日期': idx === 0 ? now.toLocaleString('zh-TW', {year:'numeric',month:'2-digit',day:'2-digit',hour:'2-digit',minute:'2-digit',second:'2-digit',hour12:false}) : '',
+      '填單日期': idx === 0 ? now.toLocaleString('zh-TW', {timeZone:'Asia/Taipei',year:'numeric',month:'2-digit',day:'2-digit',hour:'2-digit',minute:'2-digit',second:'2-digit',hour12:false}) : '',
       '發票號碼': idx === 0 ? invoice : '',
       '姓名':     idx === 0 ? name : '',
       '電話':     idx === 0 ? phone : '',
@@ -438,14 +438,33 @@ async function submitOrder() {
       '備註':     idx === 0 ? note : ''
     });
   });
-  try {
-    await fetch(GAS_URL, { method: 'POST', mode: 'no-cors', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(rows) });
+
+  const maxRetry = 3;
+  let success = false;
+
+  for (let i = 0; i < maxRetry; i++) {
+    try {
+      const res = await fetch(GAS_URL, {
+        method: 'POST',
+        headers: { 'Content-Type': 'text/plain' },
+        body: JSON.stringify(rows)
+      });
+      const data = await res.json();
+      if (data.success) { success = true; break; }
+    } catch(err) {
+      if (i < maxRetry - 1) {
+        await new Promise(r => setTimeout(r, 1500));
+      }
+    }
+  }
+
+  document.getElementById('overlay').classList.remove('show');
+
+  if (success) {
     showSuccess({ invoice, name, phone, address, note });
-  } catch(err) {
-    alert('送出失敗，請稍後再試。');
+  } else {
+    alert('❌ 送出失敗，請確認網路連線後再試一次。\n\n如持續失敗請告知現場工作人員。');
     btn.disabled = false;
-  } finally {
-    document.getElementById('overlay').classList.remove('show');
   }
 }
 
