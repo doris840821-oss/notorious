@@ -252,7 +252,10 @@
       <div class="header-title">NOTORIOUS 後台管理</div>
       <div class="header-sub">地推訂單總覽</div>
     </div>
-    <button class="btn-logout" onclick="doLogout()">登出</button>
+    <div style="display:flex;gap:8px;">
+      <button class="btn-logout" onclick="refreshData()" id="btn-refresh">↻ 刷新</button>
+      <button class="btn-logout" onclick="doLogout()">登出</button>
+    </div>
   </div>
 
   <div class="main">
@@ -291,7 +294,7 @@
 </div>
 
 <script>
-const ADMIN_PASSWORD = 'notorious2025';
+const ADMIN_PASSWORD = 'ad82801985';
 const SKU_MAP = {
   '分離乳清::重磅巧克力': { sku: 'N2101LCEB0201-25-13', name: '分離乳清-重磅巧克力' },
   '分離乳清::草莓':       { sku: 'N2101LCEB0201-02-13', name: '分離乳清-草莓' },
@@ -363,9 +366,8 @@ async function saveOrders() {
 function doLogin() {
   const pw = document.getElementById('pw-input').value;
   if (pw === ADMIN_PASSWORD) {
-    document.getElementById('login-screen').classList.add('hidden');
-    document.getElementById('admin-screen').classList.remove('hidden');
-    loadOrders().then(() => renderTable(''));
+    sessionStorage.setItem('notorious_admin', '1');
+    showAdmin();
   } else {
     document.getElementById('pw-err').classList.add('show');
     document.getElementById('pw-input').value = '';
@@ -373,11 +375,33 @@ function doLogin() {
   }
 }
 
+function showAdmin() {
+  document.getElementById('login-screen').classList.add('hidden');
+  document.getElementById('admin-screen').classList.remove('hidden');
+  loadOrders().then(() => renderTable(''));
+}
+
 function doLogout() {
+  sessionStorage.removeItem('notorious_admin');
   document.getElementById('login-screen').classList.remove('hidden');
   document.getElementById('admin-screen').classList.add('hidden');
   document.getElementById('pw-input').value = '';
   document.getElementById('pw-err').classList.remove('show');
+}
+
+async function refreshData() {
+  const btn = document.getElementById('btn-refresh');
+  btn.textContent = '刷新中...';
+  btn.disabled = true;
+  await loadOrders();
+  renderTable('');
+  btn.textContent = '↻ 刷新';
+  btn.disabled = false;
+}
+
+// 頁面載入時自動判斷是否已登入
+if (sessionStorage.getItem('notorious_admin') === '1') {
+  showAdmin();
 }
 
 function renderTable(filter) {
