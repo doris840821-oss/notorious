@@ -64,17 +64,17 @@
   .flavor-card { border: 1.5px solid var(--gray-200); border-radius: var(--radius-sm); padding: 10px 8px; background: var(--gray-50); transition: all 0.15s; }
   .flavor-card.selected { border-width: 2px; }
   /* 分離乳清 — 灰 */
-  .flavor-card.sel-分離乳清 { border-color: #888; background: #F0F0F0; }
+  .flavor-card.sel-cat0 { border-color: #888 !important; background: #F0F0F0 !important; }
   /* 濃縮乳清 — 淡紅 */
-  .flavor-card.sel-濃縮乳清 { border-color: #D9534F; background: #FDECEA; }
+  .flavor-card.sel-cat1 { border-color: #D9534F !important; background: #FDECEA !important; }
   /* 純素乳清 — 淡綠 */
-  .flavor-card.sel-純素乳清 { border-color: #4CAF76; background: #EBF7F0; }
+  .flavor-card.sel-cat2 { border-color: #4CAF76 !important; background: #EBF7F0 !important; }
   /* 訓練補給 — 淡橘 */
-  .flavor-card.sel-訓練補給 { border-color: #E07B39; background: #FEF2EA; }
+  .flavor-card.sel-cat3 { border-color: #E07B39 !important; background: #FEF2EA !important; }
   /* 搖搖杯 — 淡藍 */
-  .flavor-card.sel-搖搖杯 { border-color: #4A90C4; background: #EBF4FB; }
+  .flavor-card.sel-cat4 { border-color: #4A90C4 !important; background: #EBF4FB !important; }
   /* 保健食品 — 淡紫 */
-  .flavor-card.sel-保健食品 { border-color: #8B6BB1; background: #F3EEFB; }
+  .flavor-card.sel-cat5 { border-color: #8B6BB1 !important; background: #F3EEFB !important; }
 
   .flavor-name { font-size: 12px; font-weight: 500; color: var(--gray-800); margin-bottom: 8px; line-height: 1.4; min-height: 32px; display: flex; align-items: center; }
   .flavor-card.selected .flavor-name { color: var(--gray-800); }
@@ -359,7 +359,7 @@ function toStep3() {
 function buildProducts() {
   const area = document.getElementById('product-area');
   area.innerHTML = '';
-  PRODUCTS.forEach(p => {
+  PRODUCTS.forEach((p, catIdx) => {
     const card = document.createElement('div');
     card.className = 'card';
     card.innerHTML = `<div class="card-title">${p.cat}</div><div class="product-grid"></div>`;
@@ -369,28 +369,27 @@ function buildProducts() {
       const key = p.cat + '::' + f;
       const qty = selections[key] || 0;
       const div = document.createElement('div');
-      const selClass = qty > 0 ? ` selected sel-${p.cat}` : '';
-      div.className = 'flavor-card' + selClass;
+      div.className = 'flavor-card' + (qty > 0 ? ` selected sel-cat${catIdx}` : '');
       div.id = 'fc-' + key;
-      div.dataset.cat = p.cat;
+      div.dataset.catidx = catIdx;
       div.innerHTML = `<div class="flavor-name">${f}</div>
         <div class="qty-row">
-          <button class="qty-btn" onclick="chQty('${key}','${p.cat}',-1)">−</button>
+          <button class="qty-btn" onclick="chQty('${key}',${catIdx},-1)">−</button>
           <span class="qty-num" id="qn-${key}">${qty}</span>
-          <button class="qty-btn" onclick="chQty('${key}','${p.cat}',1)">+</button>
+          <button class="qty-btn" onclick="chQty('${key}',${catIdx},1)">+</button>
         </div>`;
       grid.appendChild(div);
     });
   });
 }
 
-function chQty(key, cat, d) {
+function chQty(key, catIdx, d) {
   const next = Math.max(0, (selections[key] || 0) + d);
   if (next === 0) delete selections[key]; else selections[key] = next;
   const qn = document.getElementById('qn-' + key);
   const fc = document.getElementById('fc-' + key);
   if (qn) qn.textContent = next;
-  if (fc) fc.className = 'flavor-card' + (next > 0 ? ` selected sel-${cat}` : '');
+  if (fc) fc.className = 'flavor-card' + (next > 0 ? ` selected sel-cat${catIdx}` : '');
 }
 
 function buildReview() {
