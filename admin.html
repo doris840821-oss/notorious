@@ -355,17 +355,25 @@ const GAS_URL = 'https://script.google.com/macros/s/AKfycbzyV2iruxbvlVAnZl_cevkU
 
 let allRows = []; // 每列是 Google Sheets 的一筆原始列資料
 
-async function loadOrders() {
-  try {
-    const res = await fetch(GAS_URL);
-    const data = await res.json();
-    if (data.success) {
-      allRows = data.rows.filter(r => r['填單日期'] !== '填單日期' && r['姓名'] !== '');
-    }
-  } catch(e) {
-    console.error('讀取失敗', e);
-    allRows = [];
-  }
+function loadOrders() {
+  return new Promise((resolve) => {
+    const callbackName = 'gasCallback_' + Date.now();
+    window[callbackName] = function(data) {
+      if (data.success) {
+        allRows = data.rows.filter(r => r['填單日期'] && r['填單日期'] !== '填單日期');
+      } else {
+        allRows = [];
+      }
+      delete window[callbackName];
+      document.getElementById('script-loader')?.remove();
+      resolve();
+    };
+    const script = document.createElement('script');
+    script.id = 'script-loader';
+    script.src = GAS_URL + '?callback=' + callbackName;
+    script.onerror = () => { allRows = []; resolve(); };
+    document.body.appendChild(script);
+  });
 }
 
 function doLogin() {
