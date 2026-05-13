@@ -277,9 +277,10 @@
               <th>電話</th>
               <th>配送</th>
               <th>地址 / 門市</th>
-              <th>商品明細</th>
+              <th>商品名稱</th>
+              <th>數量</th>
               <th>備註</th>
-              <th>填單時間</th>
+              <th>填單日期</th>
             </tr>
           </thead>
           <tbody id="order-tbody"></tbody>
@@ -350,17 +351,21 @@ const SKU_MAP = {
   '保健食品::運動益生菌':          { sku: 'N2507SYNA0301-00-01', name: '運動益生菌' },
 };
 
-let allOrders = [];
+const GAS_URL = 'https://script.google.com/macros/s/AKfycbzyV2iruxbvlVAnZl_cevkU16iG2ZH2JxGfmI73azlZqhviA6kWhi6BFV7FIsnfidBbdA/exec';
+
+let allRows = []; // 每列是 Google Sheets 的一筆原始列資料
 
 async function loadOrders() {
   try {
-    const r = await window.storage.get('tsiapo_orders');
-    if (r && r.value) allOrders = JSON.parse(r.value);
-  } catch(e) { allOrders = []; }
-}
-
-async function saveOrders() {
-  try { await window.storage.set('tsiapo_orders', JSON.stringify(allOrders)); } catch(e) {}
+    const res = await fetch(GAS_URL);
+    const data = await res.json();
+    if (data.success) {
+      allRows = data.rows.filter(r => r['填單日期'] !== '填單日期' && r['姓名'] !== '');
+    }
+  } catch(e) {
+    console.error('讀取失敗', e);
+    allRows = [];
+  }
 }
 
 function doLogin() {
@@ -399,22 +404,29 @@ async function refreshData() {
   btn.disabled = false;
 }
 
-// 頁面載入時自動判斷是否已登入
 if (sessionStorage.getItem('notorious_admin') === '1') {
   showAdmin();
 }
 
 function renderTable(filter) {
   const q = filter.trim().toLowerCase();
-  const filtered = allOrders.filter(o =>
-    !q || o.name.includes(q) || o.phone.includes(q) || o.invoice.toLowerCase().includes(q)
-  );
 
-  const totalOrders = allOrders.length;
-  const totalItems = allOrders.reduce((acc, o) => acc + Object.values(o.products).reduce((a,b)=>a+b,0), 0);
+  // 篩選有資料的列（填單日期不為空 = 該列是一筆訂單的第一列）
+  const filtered = allRows.filter(r => {
+    if (!q) return true;
+    return (r['姓名']||'').includes(q) ||
+           (r['電話']||'').includes(q) ||
+           (r['發票號碼']||'').toLowerCase().includes(q);
+  });
+
+  // 統計：只取有發票號碼的列（代表每筆訂單第一列）
+  const orderRows = allRows.filter(r => r['發票號碼'] && r['發票號碼'] !== '');
+  const totalOrders = orderRows.length;
+  const totalItems = allRows.reduce((acc, r) => acc + (Number(r['數量']) || 0), 0);
   const dc = {};
-  allOrders.forEach(o => { dc[o.delivery] = (dc[o.delivery]||0)+1; });
+  orderRows.forEach(r => { if(r['配送方式']) dc[r['配送方式']] = (dc[r['配送方式']]||0)+1; });
   const top = Object.entries(dc).sort((a,b)=>b[1]-a[1])[0];
+
   document.getElementById('stat-grid').innerHTML = `
     <div class="stat-card"><div class="stat-num">${totalOrders}</div><div class="stat-label">總訂單數</div></div>
     <div class="stat-card"><div class="stat-num">${totalItems}</div><div class="stat-label">總商品件數</div></div>
@@ -429,63 +441,33 @@ function renderTable(filter) {
     return;
   }
   empty.classList.add('hidden');
-  tbody.innerHTML = filtered.map(o => {
-    const prods = Object.entries(o.products).map(([k,q]) => {
-      const info = SKU_MAP[k];
-      return `${info ? info.name : k} ×${q}`;
-    }).join('<br>');
-    const bc = o.delivery === '宅配' ? 'badge-delivery' : o.delivery.includes('全家') ? 'badge-family' : 'badge-seven';
-    return `<tr>
-      <td class="invoice">${o.invoice}</td>
-      <td>${o.name}</td>
-      <td>${o.phone}</td>
-      <td><span class="badge ${bc}">${o.delivery}</span></td>
-      <td style="max-width:180px;white-space:normal;font-size:13px">${o.address}</td>
-      <td class="products">${prods}</td>
-      <td style="font-size:12px;color:var(--gray-400);max-width:120px;white-space:normal">${o.note || '—'}</td>
-      <td style="font-size:12px;color:var(--gray-400)">${o.time}</td>
+
+  tbody.innerHTML = filtered.map(r => {
+    const delivery = r['配送方式'] || '';
+    const bc = delivery === '宅配' ? 'badge-delivery' : delivery.includes('全家') ? 'badge-family' : 'badge-seven';
+    const isFirstRow = r['發票號碼'] && r['發票號碼'] !== '';
+    return `<tr style="${isFirstRow ? 'border-top:2px solid var(--gray-100)' : ''}">
+      <td class="invoice">${r['發票號碼'] || ''}</td>
+      <td>${r['姓名'] || ''}</td>
+      <td>${r['電話'] || ''}</td>
+      <td>${delivery ? `<span class="badge ${bc}">${delivery}</span>` : ''}</td>
+      <td style="max-width:180px;white-space:normal;font-size:13px">${r['地址/門市'] || ''}</td>
+      <td style="font-size:13px">${r['商品名稱'] || ''}</td>
+      <td style="text-align:center;font-weight:600">${r['數量'] || ''}</td>
+      <td style="font-size:12px;color:var(--gray-400);max-width:120px;white-space:normal">${r['備註'] || ''}</td>
+      <td style="font-size:11px;color:var(--gray-400)">${r['填單日期'] || ''}</td>
     </tr>`;
   }).join('');
 }
 
-function orderToRows(orders) {
-  const rows = [];
-  orders.forEach(o => {
-    Object.entries(o.products).forEach(([k, qty], idx) => {
-      const info = SKU_MAP[k] || { sku: '待補', name: k };
-      rows.push({
-        '填單日期': idx === 0 ? o.time.split(' ')[0] : '',
-        '發票號碼': idx === 0 ? o.invoice : '',
-        '姓名':     idx === 0 ? o.name : '',
-        '電話':     idx === 0 ? o.phone : '',
-        '配送方式': idx === 0 ? o.delivery : '',
-        '地址/門市':idx === 0 ? o.address : '',
-        '商品貨號': info.sku,
-        '商品名稱': info.name,
-        '數量':     qty,
-        '備註':     idx === 0 ? o.note : ''
-      });
-    });
-  });
-  return rows;
-}
-
 function exportExcel() {
-  if (!allOrders.length) { alert('尚無訂單資料'); return; }
-  const rows = orderToRows(allOrders);
-  const ws = XLSX.utils.json_to_sheet(rows, {
+  if (!allRows.length) { alert('尚無訂單資料'); return; }
+  const ws = XLSX.utils.json_to_sheet(allRows, {
     header: ['填單日期','發票號碼','姓名','電話','配送方式','地址/門市','商品貨號','商品名稱','數量','備註']
   });
   const wb = XLSX.utils.book_new();
   XLSX.utils.book_append_sheet(wb, ws, '訂單明細');
   XLSX.writeFile(wb, `NOTORIOUS訂單_${new Date().toLocaleDateString('zh-TW').replace(/\//g,'-')}.xlsx`);
-}
-
-function clearAll() {
-  if (!confirm(`確定要刪除全部 ${allOrders.length} 筆訂單嗎？此操作無法復原。`)) return;
-  allOrders = [];
-  saveOrders();
-  renderTable('');
 }
 </script>
 </body>
