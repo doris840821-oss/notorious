@@ -119,6 +119,20 @@
   <div class="overlay-text">資料傳送中，請勿關閉頁面...</div>
 </div>
 
+<!-- 健身房開關 modal -->
+<div id="gym-modal" class="hidden" style="position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:998;display:flex;align-items:center;justify-content:center;">
+  <div style="background:#fff;border-radius:16px;padding:2rem 1.5rem;width:300px;text-align:center;">
+    <div style="font-size:16px;font-weight:700;margin-bottom:6px;">管理設定</div>
+    <div style="font-size:13px;color:#999;margin-bottom:1.25rem;">輸入密碼以開啟/關閉健身房取貨選項</div>
+    <input type="password" id="gym-pw" placeholder="請輸入密碼" style="width:100%;padding:10px 14px;border:1.5px solid #ddd;border-radius:8px;font-size:15px;text-align:center;font-family:'Noto Sans TC',sans-serif;margin-bottom:8px;">
+    <div id="gym-pw-err" style="font-size:12px;color:#cc3333;margin-bottom:10px;display:none;">密碼錯誤</div>
+    <div style="display:flex;gap:8px;">
+      <button onclick="closeGymModal()" style="flex:1;padding:11px;background:#fff;border:1.5px solid #ddd;border-radius:8px;font-size:14px;cursor:pointer;font-family:'Noto Sans TC',sans-serif;">取消</button>
+      <button onclick="confirmGymPw()" style="flex:1;padding:11px;background:#111;color:#fff;border:none;border-radius:8px;font-size:14px;cursor:pointer;font-weight:700;font-family:'Noto Sans TC',sans-serif;">確認</button>
+    </div>
+  </div>
+</div>
+
 <div class="header">
   <h1>惡名昭彰NOTORIOUS</h1>
   <p>地推販售 · 滿 $2000 免運</p>
@@ -151,7 +165,7 @@
       </div>
       <div class="field">
         <label>配送方式<span class="req">*</span></label>
-        <div class="delivery-opts">
+        <div class="delivery-opts" id="delivery-opts">
           <div class="delivery-opt" onclick="pickDelivery(this,'宅配')">
             <div class="d-icon">
               <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#555" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
@@ -179,8 +193,18 @@
             </div>
             7-11
           </div>
+          <div class="delivery-opt hidden" id="opt-gym" onclick="pickDelivery(this,'健身房取貨')">
+            <div class="d-icon">
+              <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#555" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M6 4v16M18 4v16M4 8h2M18 8h2M4 16h2M18 16h2M8 12h8"/>
+              </svg>
+            </div>
+            健身房
+          </div>
         </div>
         <div class="err" id="e-delivery">請選擇配送方式</div>
+        <!-- 隱藏開關入口：連點標題5下觸發 -->
+        <div id="gym-toggle-hint" style="font-size:11px;color:var(--gray-200);margin-top:6px;cursor:default;user-select:none" onclick="gymTapCount()">·</div>
       </div>
       <div class="field">
         <label id="addr-label">收件地址<span class="req">*</span></label>
@@ -237,8 +261,79 @@
 
 <script>
 const GAS_URL = 'https://script.google.com/macros/s/AKfycbzyV2iruxbvlVAnZl_cevkU16iG2ZH2JxGfmI73azlZqhviA6kWhi6BFV7FIsnfidBbdA/exec';
+const GYM_PASSWORD = 'ad82801985';
 
-const SKU_MAP = {
+let delivery = '';
+let selections = {};
+let gymTaps = 0;
+let gymTapTimer = null;
+
+// 健身房開關
+function gymTapCount() {
+  gymTaps++;
+  clearTimeout(gymTapTimer);
+  gymTapTimer = setTimeout(() => { gymTaps = 0; }, 2000);
+  if (gymTaps >= 5) {
+    gymTaps = 0;
+    openGymModal();
+  }
+}
+
+function openGymModal() {
+  document.getElementById('gym-modal').classList.remove('hidden');
+  document.getElementById('gym-modal').style.display = 'flex';
+  document.getElementById('gym-pw').value = '';
+  document.getElementById('gym-pw-err').style.display = 'none';
+  setTimeout(() => document.getElementById('gym-pw').focus(), 100);
+}
+
+function closeGymModal() {
+  document.getElementById('gym-modal').style.display = 'none';
+  document.getElementById('gym-modal').classList.add('hidden');
+}
+
+function confirmGymPw() {
+  const pw = document.getElementById('gym-pw').value;
+  if (pw !== GYM_PASSWORD) {
+    document.getElementById('gym-pw-err').style.display = 'block';
+    document.getElementById('gym-pw').value = '';
+    return;
+  }
+  const gymOpt = document.getElementById('opt-gym');
+  const isHidden = gymOpt.classList.contains('hidden');
+  if (isHidden) {
+    gymOpt.classList.remove('hidden');
+    document.getElementById('gym-toggle-hint').textContent = '● 健身房取貨：已開啟';
+    document.getElementById('gym-toggle-hint').style.color = '#1D9E75';
+  } else {
+    gymOpt.classList.add('hidden');
+    document.getElementById('gym-toggle-hint').textContent = '·';
+    document.getElementById('gym-toggle-hint').style.color = 'var(--gray-200)';
+    if (delivery === '健身房取貨') {
+      delivery = '';
+      document.querySelectorAll('.delivery-opt').forEach(o => o.classList.remove('selected'));
+    }
+  }
+  closeGymModal();
+}
+
+function pickDelivery(el, val) {
+  document.querySelectorAll('.delivery-opt').forEach(o => o.classList.remove('selected'));
+  el.classList.add('selected');
+  delivery = val;
+  const addrLabel = document.getElementById('addr-label');
+  const addrInput = document.getElementById('f-address');
+  if (val === '宅配') {
+    addrLabel.innerHTML = '收件地址<span class="req">*</span>';
+    addrInput.placeholder = '請填寫完整收件地址（縣市區路號樓）';
+  } else if (val === '健身房取貨') {
+    addrLabel.innerHTML = '健身房名稱<span class="req">*</span>';
+    addrInput.placeholder = '請填寫健身房名稱';
+  } else {
+    addrLabel.innerHTML = '取貨門市<span class="req">*</span>';
+    addrInput.placeholder = `請填寫門市名稱，如：${val === '全家取貨' ? '全家信義門市' : '7-11信義門市'}`;
+  }
+}
   '分離乳清::重磅巧克力': { sku: 'N2101LCEB0201-25-13', name: '分離乳清-重磅巧克力' },
   '分離乳清::草莓':       { sku: 'N2101LCEB0201-02-13', name: '分離乳清-草莓' },
   '分離乳清::鐵觀音':     { sku: 'N2101LCEB0201-09-13', name: '分離乳清-鐵觀音' },
@@ -302,23 +397,7 @@ const PRODUCTS = [
   { cat: '保健食品', flavors: ['魚油','舒眠晚安膠囊','膠原蛋白粉','鋅鎂力膠囊','有機馬卡根粉','金盞花葉黃素','機能強化膠囊','綜合B群X維生素','克菲爾益生菌','維生素D3x酵母葡聚糖','迅捷全效雙薑黃','綜合酵素X D-核糖','UC-II複方膠囊','硬漢膠囊','鈣X維生素K2','運動益生菌'] }
 ];
 
-let delivery = '';
-let selections = {};
-
-function pickDelivery(el, val) {
-  document.querySelectorAll('.delivery-opt').forEach(o => o.classList.remove('selected'));
-  el.classList.add('selected');
-  delivery = val;
-  const addrLabel = document.getElementById('addr-label');
-  const addrInput = document.getElementById('f-address');
-  if (val === '宅配') {
-    addrLabel.innerHTML = '收件地址<span class="req">*</span>';
-    addrInput.placeholder = '請填寫完整收件地址（縣市區路號樓）';
-  } else {
-    addrLabel.innerHTML = '取貨門市<span class="req">*</span>';
-    addrInput.placeholder = `請填寫門市名稱，如：${val === '全家取貨' ? '全家信義門市' : '7-11信義門市'}`;
-  }
-}
+const SKU_MAP = {
 
 function toStep(n) {
   [1,2,3].forEach(i => document.getElementById('page-'+i).classList.toggle('hidden', i !== n));
@@ -439,6 +518,7 @@ async function submitOrder() {
     });
   });
 
+  const isGym = delivery === '健身房取貨';
   const maxRetry = 3;
   let success = false;
 
@@ -447,7 +527,7 @@ async function submitOrder() {
       const res = await fetch(GAS_URL, {
         method: 'POST',
         headers: { 'Content-Type': 'text/plain' },
-        body: JSON.stringify(rows)
+        body: JSON.stringify({ sheet: isGym ? 'gym' : 'main', rows })
       });
       const data = await res.json();
       if (data.success) { success = true; break; }
