@@ -120,8 +120,8 @@
 </div>
 
 <!-- 健身房開關 modal -->
-<div id="gym-modal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:998;align-items:center;justify-content:center;">
-  <div style="background:#fff;border-radius:16px;padding:2rem 1.5rem;width:300px;text-align:center;">
+<div id="gym-modal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:998;">
+  <div style="position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);background:#fff;border-radius:16px;padding:2rem 1.5rem;width:300px;text-align:center;">
     <div style="font-size:16px;font-weight:700;margin-bottom:6px;">管理設定</div>
     <div style="font-size:13px;color:#999;margin-bottom:1.25rem;">輸入密碼以開啟/關閉健身房取貨選項</div>
     <input type="password" id="gym-pw" placeholder="請輸入密碼" onkeydown="if(event.key==='Enter')confirmGymPw()" style="width:100%;padding:10px 14px;border:1.5px solid #ddd;border-radius:8px;font-size:15px;text-align:center;font-family:'Noto Sans TC',sans-serif;margin-bottom:8px;">
@@ -273,7 +273,7 @@ let selections = {};
 function openGymModal() {
   document.getElementById('gym-pw').value = '';
   document.getElementById('gym-pw-err').style.display = 'none';
-  document.getElementById('gym-modal').style.display = 'flex';
+  document.getElementById('gym-modal').style.display = 'block';
   setTimeout(() => document.getElementById('gym-pw').focus(), 100);
 }
 
