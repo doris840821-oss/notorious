@@ -180,7 +180,7 @@
             </div>
             7-11
           </div>
-          <div class="delivery-opt hidden" id="opt-gym" onclick="pickDelivery(this,'健身房取貨')">
+          <div class="delivery-opt" id="opt-gym" style="display:none" onclick="pickDelivery(this,'健身房取貨')">
             <div class="d-icon">
               <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#555" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
                 <path d="M6 4v16M18 4v16M4 8h2M18 8h2M4 16h2M18 16h2M8 12h8"/>
@@ -256,7 +256,7 @@ let selections = {};
 // 網址有 ?gym=1 就自動顯示健身房選項
 document.addEventListener('DOMContentLoaded', function() {
   if (new URLSearchParams(window.location.search).get('gym') === '1') {
-    document.getElementById('opt-gym').classList.remove('hidden');
+    document.getElementById('opt-gym').style.display = 'flex';
   }
 });
 
