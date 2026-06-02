@@ -192,7 +192,6 @@
         <div class="err" id="e-delivery">請選擇配送方式</div>
       </div>
       <div style="margin-top:-4px;margin-bottom:12px;text-align:right;">
-        <button id="gym-manage-btn" type="button" onclick="openGymModal()" style="background:none;border:1px solid #ccc;border-radius:6px;padding:5px 12px;font-size:12px;color:#888;cursor:pointer;font-family:'Noto Sans TC',sans-serif;">⚙ 管理配送選項</button>
       </div>
       <div class="field">
         <label id="addr-label">收件地址<span class="req">*</span></label>
@@ -247,20 +246,6 @@
   </div>
 </div>
 
-<!-- 健身房開關 modal -->
-<div id="gym-modal" style="display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.6);z-index:9999;">
-  <div style="position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);background:#fff;border-radius:16px;padding:2rem 1.5rem;width:290px;max-width:90vw;text-align:center;box-shadow:0 8px 32px rgba(0,0,0,0.2);">
-    <div style="font-size:16px;font-weight:700;margin-bottom:6px;">管理設定</div>
-    <div style="font-size:13px;color:#999;margin-bottom:1.25rem;">輸入密碼以開啟/關閉健身房取貨選項</div>
-    <input type="password" id="gym-pw" placeholder="請輸入密碼" onkeydown="if(event.key==='Enter')confirmGymPw()" style="width:100%;padding:10px 14px;border:1.5px solid #ddd;border-radius:8px;font-size:15px;text-align:center;font-family:'Noto Sans TC',sans-serif;margin-bottom:8px;box-sizing:border-box;">
-    <div id="gym-pw-err" style="font-size:12px;color:#cc3333;margin-bottom:10px;display:none;">密碼錯誤，請再試一次</div>
-    <div style="display:flex;gap:8px;">
-      <button onclick="closeGymModal()" style="flex:1;padding:12px;background:#fff;border:1.5px solid #ddd;border-radius:8px;font-size:14px;cursor:pointer;font-family:'Noto Sans TC',sans-serif;">取消</button>
-      <button onclick="confirmGymPw()" style="flex:1;padding:12px;background:#111;color:#fff;border:none;border-radius:8px;font-size:14px;cursor:pointer;font-weight:700;font-family:'Noto Sans TC',sans-serif;">確認</button>
-    </div>
-  </div>
-</div>
-
 <script>
 const GAS_URL = 'https://script.google.com/macros/s/AKfycbzyV2iruxbvlVAnZl_cevkU16iG2ZH2JxGfmI73azlZqhviA6kWhi6BFV7FIsnfidBbdA/exec';
 const GYM_PASSWORD = 'ad82801985';
@@ -268,36 +253,9 @@ const GYM_PASSWORD = 'ad82801985';
 let delivery = '';
 let selections = {};
 
-function openGymModal() {
-  document.getElementById('gym-pw').value = '';
-  document.getElementById('gym-pw-err').style.display = 'none';
-  document.getElementById('gym-modal').style.display = 'block';
-  setTimeout(() => document.getElementById('gym-pw').focus(), 100);
-}
-
-function closeGymModal() {
-  document.getElementById('gym-modal').style.display = 'none';
-}
-
-function confirmGymPw() {
-  const pw = document.getElementById('gym-pw').value;
-  if (pw !== GYM_PASSWORD) {
-    document.getElementById('gym-pw-err').style.display = 'block';
-    document.getElementById('gym-pw').value = '';
-    return;
-  }
-  const gymOpt = document.getElementById('opt-gym');
-  const isHidden = gymOpt.classList.contains('hidden');
-  if (isHidden) {
-    gymOpt.classList.remove('hidden');
-  } else {
-    gymOpt.classList.add('hidden');
-    if (delivery === '健身房取貨') {
-      delivery = '';
-      document.querySelectorAll('.delivery-opt').forEach(o => o.classList.remove('selected'));
-    }
-  }
-  closeGymModal();
+// 網址有 ?gym=1 就自動顯示健身房選項
+if (new URLSearchParams(window.location.search).get('gym') === '1') {
+  document.getElementById('opt-gym').classList.remove('hidden');
 }
 
 function pickDelivery(el, val) {
