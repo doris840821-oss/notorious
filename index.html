@@ -119,19 +119,6 @@
   <div class="overlay-text">資料傳送中，請勿關閉頁面...</div>
 </div>
 
-<!-- 健身房開關 modal -->
-<div id="gym-modal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:998;">
-  <div style="position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);background:#fff;border-radius:16px;padding:2rem 1.5rem;width:300px;text-align:center;">
-    <div style="font-size:16px;font-weight:700;margin-bottom:6px;">管理設定</div>
-    <div style="font-size:13px;color:#999;margin-bottom:1.25rem;">輸入密碼以開啟/關閉健身房取貨選項</div>
-    <input type="password" id="gym-pw" placeholder="請輸入密碼" onkeydown="if(event.key==='Enter')confirmGymPw()" style="width:100%;padding:10px 14px;border:1.5px solid #ddd;border-radius:8px;font-size:15px;text-align:center;font-family:'Noto Sans TC',sans-serif;margin-bottom:8px;">
-    <div id="gym-pw-err" style="font-size:12px;color:#cc3333;margin-bottom:10px;display:none;">密碼錯誤</div>
-    <div style="display:flex;gap:8px;">
-      <button onclick="closeGymModal()" style="flex:1;padding:11px;background:#fff;border:1.5px solid #ddd;border-radius:8px;font-size:14px;cursor:pointer;font-family:'Noto Sans TC',sans-serif;">取消</button>
-      <button onclick="confirmGymPw()" style="flex:1;padding:11px;background:#111;color:#fff;border:none;border-radius:8px;font-size:14px;cursor:pointer;font-weight:700;font-family:'Noto Sans TC',sans-serif;">確認</button>
-    </div>
-  </div>
-</div>
 
 <div class="header">
   <h1>惡名昭彰NOTORIOUS</h1>
@@ -259,6 +246,20 @@
         <div class="order-box" id="success-summary"></div>
         <button class="btn-primary" onclick="resetAll()">填寫新訂單</button>
       </div>
+    </div>
+  </div>
+</div>
+
+<!-- 健身房開關 modal -->
+<div id="gym-modal" style="display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.6);z-index:9999;">
+  <div style="position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);background:#fff;border-radius:16px;padding:2rem 1.5rem;width:290px;max-width:90vw;text-align:center;box-shadow:0 8px 32px rgba(0,0,0,0.2);">
+    <div style="font-size:16px;font-weight:700;margin-bottom:6px;">管理設定</div>
+    <div style="font-size:13px;color:#999;margin-bottom:1.25rem;">輸入密碼以開啟/關閉健身房取貨選項</div>
+    <input type="password" id="gym-pw" placeholder="請輸入密碼" onkeydown="if(event.key==='Enter')confirmGymPw()" style="width:100%;padding:10px 14px;border:1.5px solid #ddd;border-radius:8px;font-size:15px;text-align:center;font-family:'Noto Sans TC',sans-serif;margin-bottom:8px;box-sizing:border-box;">
+    <div id="gym-pw-err" style="font-size:12px;color:#cc3333;margin-bottom:10px;display:none;">密碼錯誤，請再試一次</div>
+    <div style="display:flex;gap:8px;">
+      <button onclick="closeGymModal()" style="flex:1;padding:12px;background:#fff;border:1.5px solid #ddd;border-radius:8px;font-size:14px;cursor:pointer;font-family:'Noto Sans TC',sans-serif;">取消</button>
+      <button onclick="confirmGymPw()" style="flex:1;padding:12px;background:#111;color:#fff;border:none;border-radius:8px;font-size:14px;cursor:pointer;font-weight:700;font-family:'Noto Sans TC',sans-serif;">確認</button>
     </div>
   </div>
 </div>
