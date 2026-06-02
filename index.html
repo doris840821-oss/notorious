@@ -254,9 +254,11 @@ let delivery = '';
 let selections = {};
 
 // 網址有 ?gym=1 就自動顯示健身房選項
-if (new URLSearchParams(window.location.search).get('gym') === '1') {
-  document.getElementById('opt-gym').classList.remove('hidden');
-}
+document.addEventListener('DOMContentLoaded', function() {
+  if (new URLSearchParams(window.location.search).get('gym') === '1') {
+    document.getElementById('opt-gym').classList.remove('hidden');
+  }
+});
 
 function pickDelivery(el, val) {
   document.querySelectorAll('.delivery-opt').forEach(o => o.classList.remove('selected'));
